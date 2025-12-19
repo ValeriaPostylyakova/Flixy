@@ -1,0 +1,68 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../generated/prisma"
+  moduleFormat = "cjs" // ОБЯЗАТЕЛЬНОЕ поле, если хотите использовать ESM, то необходимо перевести весь проект в ESM, изменив package.json и ts.config.json
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                String     @id @default(uuid())
+  email             String     @unique @db.VarChar(200)
+  displayName       String
+  picture           String?
+  password          String     @db.VarChar(255)
+  role              UserRole   @default(REGULAR)
+  isVerified        Boolean    @default(false) @map("is_verified")
+  isTwoFactorEnable Boolean    @default(false) @map("is_two_factor_enable")
+  method            AuthMethod
+  createdAt         DateTime   @default(now()) @map("created_at")
+  updatedAt         DateTime   @updatedAt @map("updated_at")
+  account           Account[]
+
+  @@map("user_data")
+}
+
+model Account {
+  id           String   @id @default(uuid())
+  type         String
+  provider     String
+  refreshToken String?  @map("refresh_token")
+  accessToken  String?  @map("access_token")
+  expiresAt    Int      @map("expires_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  userId       String?  @map("user_id")
+  user         User?    @relation(fields: [userId], references: [id])
+
+  @@map("account_data")
+}
+
+model Token {
+  id        String    @id @default(uuid())
+  email     String
+  token     String    @unique
+  type      TokenType
+  expiresIn DateTime  @map("expires_in")
+
+  @@map("token_data")
+}
+
+enum UserRole {
+  ADMIN
+  REGULAR
+}
+
+enum AuthMethod {
+  CREDENTIALS
+  GOOGLE
+  YANDEX
+}
+
+enum TokenType {
+  VERIFICATION
+  TWO_FACTOR
+  PASSWORD_RESET
+}
