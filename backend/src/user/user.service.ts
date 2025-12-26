@@ -12,6 +12,8 @@ export class UserService {
 	public constructor(private readonly prismaService: PrismaService) {}
 
 	public async findById(id: string) {
+		if (!id) return null
+
 		const user = await this.prismaService.user.findUnique({
 			where: {
 				id,
