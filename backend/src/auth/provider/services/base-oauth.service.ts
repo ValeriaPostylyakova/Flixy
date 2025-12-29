@@ -11,7 +11,6 @@ export class BaseOAuthService {
 	private BASE_URL: string
 
 	public constructor(private readonly options: TypeBaseProviderOptions) {}
-
 	protected async extractUserInfo(data: any): Promise<TypeUserInfo> {
 		return {
 			...data,
