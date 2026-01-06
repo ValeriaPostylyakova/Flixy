@@ -7,5 +7,5 @@ export const getRecaptchaSecret = async (
 ): Promise<GoogleRecaptchaModuleOptions> => ({
 	secretKey: configService.getOrThrow('GOOGLE_RECAPTCHA_SECRET_KEY'),
 	response: req => req.headers.recaptcha,
-	skipIf: isDev(configService),
+	skipIf: isDev(configService)
 })

@@ -1,7 +1,7 @@
 generator client {
   provider     = "prisma-client"
   output       = "../generated/prisma"
-  moduleFormat = "cjs" // ОБЯЗАТЕЛЬНОЕ поле, если хотите использовать ESM, то необходимо перевести весь проект в ESM, изменив package.json и ts.config.json
+  moduleFormat = "cjs"
 }
 
 datasource db {
@@ -45,6 +45,7 @@ model Token {
   email     String
   token     String    @unique
   type      TokenType
+  createdAt DateTime  @default(now()) @map("created_at")
   expiresIn DateTime  @map("expires_in")
 
   @@map("token_data")

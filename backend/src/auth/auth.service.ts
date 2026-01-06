@@ -3,7 +3,7 @@ import {
 	Injectable,
 	InternalServerErrorException,
 	NotFoundException,
-	UnauthorizedException,
+	UnauthorizedException
 } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { verify } from 'argon2'
@@ -15,6 +15,7 @@ import { UserService } from 'src/user/user.service'
 import { LoginDto } from './dto/login.dto'
 import { RegisterDto } from './dto/register.dto'
 import { ProviderService } from './provider/provider.service'
+import { EmailConfirmationService } from './email-confirmation/email-confirmation.service'
 
 @Injectable()
 export class AuthService {
@@ -22,7 +23,8 @@ export class AuthService {
 		private readonly userService: UserService,
 		private readonly config: ConfigService,
 		private readonly providerService: ProviderService,
-		private readonly prismaService: PrismaService
+		private readonly prismaService: PrismaService,
+		private readonly emailConfirmationService: EmailConfirmationService
 	) {}
 
 	public async register(req: Request, dto: RegisterDto) {
@@ -42,7 +44,12 @@ export class AuthService {
 			false
 		)
 
-		return this.saveSession(req, newUser)
+		this.emailConfirmationService.sendVerificationToken(newUser)
+
+		return {
+			message:
+				'Вы успешно зарегистрировались. Пожалуйста, подтвердите почту. Сообщение было отправлено на ваш почтовый адрес.'
+		}
 	}
 
 	public async login(req: Request, dto: LoginDto) {
@@ -79,7 +86,7 @@ export class AuthService {
 		})
 	}
 
-	private async saveSession(req: Request, user: User): Promise<User> {
+	public async saveSession(req: Request, user: User): Promise<User> {
 		return new Promise((resolve, reject) => {
 			req.session.userId = user.id
 
@@ -109,8 +116,8 @@ export class AuthService {
 		const account = await this.prismaService.account.findFirst({
 			where: {
 				id: profile?.id,
-				provider: profile?.provider,
-			},
+				provider: profile?.provider
+			}
 		})
 
 		let user = account?.userId
@@ -138,9 +145,16 @@ export class AuthService {
 					type: 'oauth',
 					accessToken: profile.access_token,
 					refreshToken: profile.refresh_token,
-					expiresAt: profile.expires_at as number,
-				},
+					expiresAt: profile.expires_at as number
+				}
 			})
+		}
+
+		if (!user.isVerified) {
+			await this.emailConfirmationService.sendVerificationToken(user)
+			throw new UnauthorizedException(
+				'Ваш email не подтвержден. Пожалуйста, проверьте вашу почту и  подтвердите адрес.'
+			)
 		}
 
 		return this.saveSession(req, user)

@@ -1,7 +1,7 @@
 import {
 	BadRequestException,
 	Injectable,
-	UnauthorizedException,
+	UnauthorizedException
 } from '@nestjs/common'
 import type { TypeBaseProviderOptions } from './types/base-provider.options.types'
 import { TypeUserInfo } from './types/user-info.types'
@@ -14,7 +14,7 @@ export class BaseOAuthService {
 	protected async extractUserInfo(data: any): Promise<TypeUserInfo> {
 		return {
 			...data,
-			provider: this.options.name,
+			provider: this.options.name
 		}
 	}
 
@@ -25,7 +25,7 @@ export class BaseOAuthService {
 			redirect_uri: this.getRedirectUrl(),
 			scope: (this.options.scopes ?? []).join(' '),
 			access_type: 'offline',
-			prompt: 'select_account',
+			prompt: 'select_account'
 		})
 
 		return `${this.options.authorize_url}?${query.toString()}`
@@ -38,8 +38,9 @@ export class BaseOAuthService {
 		const tokenQuery = new URLSearchParams({
 			client_id,
 			client_secret,
+			code,
 			redirect_uri: this.getRedirectUrl(),
-			grant_type: 'authorization_code',
+			grant_type: 'authorization_code'
 		})
 
 		const tokenRequest = await fetch(this.options.access_url, {
@@ -47,17 +48,17 @@ export class BaseOAuthService {
 			body: tokenQuery,
 			headers: {
 				'Content-Type': 'application/x-www-form-urlencoded',
-				Accept: 'application/json',
-			},
+				Accept: 'application/json'
+			}
 		})
-
-		const tokenResponse = await tokenRequest.json()
 
 		if (!tokenRequest.ok) {
 			throw new BadRequestException(
 				`Не удалось получить пользователя с ${this.options.name}. Проверьте правильность токена доступа.`
 			)
 		}
+
+		const tokenResponse = await tokenRequest.json()
 
 		if (!tokenResponse.access_token) {
 			throw new BadRequestException(
@@ -67,8 +68,8 @@ export class BaseOAuthService {
 
 		const userRequest = await fetch(this.options.profile_url, {
 			headers: {
-				Authorization: `Bearer ${tokenResponse.access_token}`,
-			},
+				Authorization: `Bearer ${tokenResponse.access_token}`
+			}
 		})
 
 		if (!userRequest.ok) {
@@ -85,7 +86,7 @@ export class BaseOAuthService {
 			access_token: tokenResponse.access_token,
 			refresh_token: tokenResponse.refresh_token,
 			expires_at: tokenResponse.expires_at,
-			provider: this.options.name,
+			provider: this.options.name
 		}
 	}
 
