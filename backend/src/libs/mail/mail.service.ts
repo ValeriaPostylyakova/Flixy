@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config'
 import { render } from '@react-email/components'
 import { ConfirmationTemplates } from './templates/confirmation.template'
 import { ResetPasswordTemplates } from './templates/reset-password.template'
+import { TwoFactorAuthTemplate } from './templates/two-factor-auth.template'
 
 @Injectable()
 export class MailService {
@@ -24,6 +25,12 @@ export class MailService {
 		const html = await render(ResetPasswordTemplates({ domain, token }))
 
 		return this.sendMail(email, 'Сброс пароля', html)
+	}
+
+	public async sendToFactorToken(email: string, token: string) {
+		const html = await render(TwoFactorAuthTemplate({ token }))
+
+		return this.sendMail(email, 'Подтверждение вашей личности', html)
 	}
 
 	public sendMail(email: string, subject: string, text: string) {

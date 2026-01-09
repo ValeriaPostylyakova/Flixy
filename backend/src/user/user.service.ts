@@ -1,11 +1,13 @@
 import {
 	ConflictException,
 	Injectable,
-	NotFoundException,
+	NotFoundException
 } from '@nestjs/common'
 import { hash } from 'argon2'
 import { AuthMethod } from 'generated/prisma/enums'
 import { PrismaService } from 'src/prisma/prisma.service'
+import { UpdateUserDto } from './dto/update-user.dto'
+import { User } from 'generated/prisma/client'
 
 @Injectable()
 export class UserService {
@@ -16,11 +18,11 @@ export class UserService {
 
 		const user = await this.prismaService.user.findUnique({
 			where: {
-				id,
+				id
 			},
 			include: {
-				account: true,
-			},
+				account: true
+			}
 		})
 
 		if (!user)
@@ -34,11 +36,11 @@ export class UserService {
 	public async findByEmail(email: string) {
 		const user = await this.prismaService.user.findUnique({
 			where: {
-				email,
+				email
 			},
 			include: {
-				account: true,
-			},
+				account: true
+			}
 		})
 
 		return user
@@ -54,8 +56,8 @@ export class UserService {
 	) {
 		const userExists = await this.prismaService.user.findUnique({
 			where: {
-				email,
-			},
+				email
+			}
 		})
 
 		if (userExists)
@@ -70,13 +72,35 @@ export class UserService {
 				displayName,
 				picture,
 				method,
-				isVerified,
+				isVerified
 			},
 			include: {
-				account: true,
-			},
+				account: true
+			}
 		})
 
 		return user
+	}
+
+	public async update(userId: string, dto: UpdateUserDto) {
+		const user = await this.findById(userId)
+
+		if (!user)
+			throw new NotFoundException(
+				'Пользователь не найден. Пожалуйста проверьте введенные данные.'
+			)
+
+		const updatedUser = await this.prismaService.user.update({
+			where: {
+				id: user.id
+			},
+			data: {
+				email: dto.email,
+				displayName: dto.name,
+				isTwoFactorEnable: dto.isTwoFactorEnabled
+			}
+		})
+
+		return updatedUser
 	}
 }

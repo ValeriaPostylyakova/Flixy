@@ -9,6 +9,7 @@ import { UserModule } from './user/user.module'
 import { MailModule } from './libs/mail/mail.module'
 import { EmailConfirmationModule } from './auth/email-confirmation/email-confirmation.module'
 import { PasswordRecoveryModule } from './auth/password-recovery/password-recovery.module'
+import { TwoFactorAuthModule } from './auth/two-factor-auth/two-factor-auth.module'
 
 @Module({
 	imports: [
@@ -19,7 +20,8 @@ import { PasswordRecoveryModule } from './auth/password-recovery/password-recove
 		ProviderModule,
 		MailModule,
 		EmailConfirmationModule,
-		PasswordRecoveryModule
+		PasswordRecoveryModule,
+		TwoFactorAuthModule
 	]
 })
 export class AppModule {}
