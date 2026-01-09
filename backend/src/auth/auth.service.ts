@@ -67,6 +67,13 @@ export class AuthService {
 				'Неверный пароль. Пожалуйста, попробуйте ещё раз или восстановите пароль, если забыли его.'
 			)
 
+		if (!user.isVerified) {
+			await this.emailConfirmationService.sendVerificationToken(user)
+			throw new UnauthorizedException(
+				'Ваш email не подтвержден. Пожалуйста, проверьте вашу почту и  подтвердите адрес.'
+			)
+		}
+
 		return this.saveSession(req, user)
 	}
 
@@ -148,13 +155,6 @@ export class AuthService {
 					expiresAt: profile.expires_at as number
 				}
 			})
-		}
-
-		if (!user.isVerified) {
-			await this.emailConfirmationService.sendVerificationToken(user)
-			throw new UnauthorizedException(
-				'Ваш email не подтвержден. Пожалуйста, проверьте вашу почту и  подтвердите адрес.'
-			)
 		}
 
 		return this.saveSession(req, user)
