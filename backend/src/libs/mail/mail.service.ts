@@ -33,11 +33,11 @@ export class MailService {
 		return this.sendMail(email, 'Подтверждение вашей личности', html)
 	}
 
-	public sendMail(email: string, subject: string, text: string) {
+	public sendMail(email: string, subject: string, html: string) {
 		return this.mailerService.sendMail({
 			to: email,
 			subject,
-			text
+			html
 		})
 	}
 }

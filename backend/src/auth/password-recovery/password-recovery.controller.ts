@@ -6,10 +6,10 @@ import {
 	Param,
 	Post
 } from '@nestjs/common'
-import { PasswordRecoveryService } from './password-recovery.service'
-import { ResetPasswordDto } from './dto/reset-password.dto'
-import { NewPasswordDto } from './dto/new-password.dto'
 import { Recaptcha } from '@nestlab/google-recaptcha'
+import { NewPasswordDto } from './dto/new-password.dto'
+import { ResetPasswordDto } from './dto/reset-password.dto'
+import { PasswordRecoveryService } from './password-recovery.service'
 
 @Controller('auth/password-recovery')
 export class PasswordRecoveryController {
@@ -18,14 +18,14 @@ export class PasswordRecoveryController {
 	) {}
 
 	@Recaptcha()
-	@Post('reset-password')
+	@Post('reset')
 	@HttpCode(HttpStatus.OK)
 	async reset(@Body() dto: ResetPasswordDto) {
 		return this.passwordRecoveryService.reset(dto)
 	}
 
 	@Recaptcha()
-	@Post('new-password/:token')
+	@Post('new/:token')
 	@HttpCode(HttpStatus.OK)
 	async newPassword(
 		@Param('token') token: string,
