@@ -9,18 +9,20 @@ datasource db {
 }
 
 model User {
-  id                String     @id @default(uuid())
-  email             String     @unique @db.VarChar(200)
+  id                String            @id @default(uuid())
+  email             String            @unique @db.VarChar(200)
   displayName       String
   picture           String?
-  password          String     @db.VarChar(255)
-  role              UserRole   @default(REGULAR)
-  isVerified        Boolean    @default(false) @map("is_verified")
-  isTwoFactorEnable Boolean    @default(false) @map("is_two_factor_enable")
+  password          String            @db.VarChar(255)
+  role              UserRole          @default(REGULAR)
+  isVerified        Boolean           @default(false) @map("is_verified")
+  isTwoFactorEnable Boolean           @default(false) @map("is_two_factor_enable")
   method            AuthMethod
-  createdAt         DateTime   @default(now()) @map("created_at")
-  updatedAt         DateTime   @updatedAt @map("updated_at")
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
   account           Account[]
+  contents          Content[]
+  contentReactions  ContentReaction[]
 
   @@map("user_data")
 }
@@ -49,6 +51,82 @@ model Token {
   expiresIn DateTime  @map("expires_in")
 
   @@map("token_data")
+}
+
+model Category {
+  id String @id @default(cuid())
+
+  name String @unique @db.VarChar(100)
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  contents  Content[]
+
+  @@map("category_data")
+}
+
+model Content {
+  id String @id @default(cuid())
+
+  type   ContentType
+  status ContentStatus @default(DRAFT)
+
+  title       String? @db.VarChar(255)
+  description String?
+
+  imageUrl String @map("image_url") @db.VarChar(500)
+  videoUrl String @map("video_url") @db.VarChar(500)
+  duration Int?
+
+  likes    Int @default(0)
+  dislikes Int @default(0)
+  views    Int @default(0)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  category         Category?         @relation(fields: [categoryId], references: [id])
+  categoryId       String?
+  user             User?             @relation(fields: [userId], references: [id])
+  userId           String?
+  contentReactions ContentReaction[]
+
+  @@index([type])
+  @@index([categoryId])
+  @@index([userId])
+  @@map("content_data")
+}
+
+model ContentReaction {
+  id String @id @default(cuid())
+
+  type ReactionType
+
+  content Content @relation(fields: [contentId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now()) @map("created_at")
+  contentId String
+  userId    String
+
+  @@unique([contentId, userId])
+  @@index([contentId])
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  BLOCKED
+}
+
+enum ContentType {
+  VIDEO
+  SHORT
+}
+
+enum ReactionType {
+  LIKE
+  DISLIKE
 }
 
 enum UserRole {
