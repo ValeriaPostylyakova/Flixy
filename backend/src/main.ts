@@ -6,7 +6,7 @@ import session from 'express-session'
 import ms from 'ms'
 import { createClient } from 'redis'
 import { AppModule } from './app.module'
-import { parseBoolean } from './libs/common/utils/parse-boolean'
+import { parseBoolean } from './shared/libs/common/utils/parse-boolean'
 
 async function bootstrap() {
 	const app = await NestFactory.create(AppModule)
@@ -15,19 +15,19 @@ async function bootstrap() {
 	const config = app.get(ConfigService)
 
 	const redisClient = createClient({
-		url: config.getOrThrow<string>('REDIS_URL'),
+		url: config.getOrThrow<string>('REDIS_URL')
 	})
 	redisClient.on('error', err => console.error('Redis Client Error', err))
 	await redisClient.connect()
 
 	const store = new RedisStore({
 		client: redisClient,
-		prefix: config.getOrThrow<string>('SESSION_FOLDER'),
+		prefix: config.getOrThrow<string>('SESSION_FOLDER')
 	})
 
 	app.useGlobalPipes(
 		new ValidationPipe({
-			transform: true,
+			transform: true
 		})
 	)
 
@@ -42,15 +42,15 @@ async function bootstrap() {
 				maxAge: ms(config.getOrThrow<string>('SESSION_MAX_AGE')),
 				httpOnly: parseBoolean(config.getOrThrow<string>('SESSION_HTTP_ONLY')),
 				secure: parseBoolean(config.getOrThrow<string>('SESSION_SECURE')),
-				sameSite: 'lax',
-			},
+				sameSite: 'lax'
+			}
 		})
 	)
 
 	app.enableCors({
 		origin: config.getOrThrow<string>('ALLOWED_ORIGIN'),
 		credentials: true,
-		exposedHeaders: ['set-cookie'],
+		exposedHeaders: ['set-cookie']
 	})
 
 	await app.listen(config.getOrThrow<number>('APPLICATION_PORT'))

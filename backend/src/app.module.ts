@@ -1,15 +1,16 @@
 import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 
-import { AuthModule } from './auth/auth.module'
-import { ProviderModule } from './auth/provider/provider.module'
-import { IS_DEV_ENV } from './libs/common/utils/is-dev.util'
-import { PrismaModule } from './prisma/prisma.module'
-import { UserModule } from './user/user.module'
-import { MailModule } from './libs/mail/mail.module'
-import { EmailConfirmationModule } from './auth/email-confirmation/email-confirmation.module'
-import { PasswordRecoveryModule } from './auth/password-recovery/password-recovery.module'
-import { TwoFactorAuthModule } from './auth/two-factor-auth/two-factor-auth.module'
+import { AuthModule } from './shared/auth/auth.module'
+import { ProviderModule } from './shared/auth/provider/provider.module'
+import { PrismaModule } from './shared/database/prisma/prisma.module'
+import { IS_DEV_ENV } from './shared/libs/common/utils/is-dev.util'
+
+import { UserModule } from './models/user/user.module'
+import { EmailConfirmationModule } from './shared/auth/email-confirmation/email-confirmation.module'
+import { PasswordRecoveryModule } from './shared/auth/password-recovery/password-recovery.module'
+import { TwoFactorAuthModule } from './shared/auth/two-factor-auth/two-factor-auth.module'
+import { MailModule } from './shared/libs/mail/mail.module'
 
 @Module({
 	imports: [
