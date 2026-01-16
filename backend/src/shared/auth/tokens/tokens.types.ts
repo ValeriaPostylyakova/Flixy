@@ -1,6 +1,6 @@
 import { TokenType } from 'generated/prisma/enums'
 
-export type TCreateToken = {
+export interface ICreateToken {
 	email: string
 	token: string
 	expiresIn: Date

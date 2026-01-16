@@ -6,9 +6,10 @@ import {
 	Post,
 	Req
 } from '@nestjs/common'
-import { EmailConfirmationService } from './email-confirmation.service'
 import type { Request } from 'express'
+import { User } from 'generated/prisma/client'
 import { ConfirmationDto } from './dto/confirmation.dto'
+import { EmailConfirmationService } from './email-confirmation.service'
 
 @Controller('auth/email-confirmation')
 export class EmailConfirmationController {
@@ -21,7 +22,7 @@ export class EmailConfirmationController {
 	public async newVerification(
 		@Req() req: Request,
 		@Body() dto: ConfirmationDto
-	) {
+	): Promise<User> {
 		return await this.emailConfirmationService.newVerificationToken(req, dto)
 	}
 }

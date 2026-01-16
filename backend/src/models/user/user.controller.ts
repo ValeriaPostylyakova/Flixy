@@ -12,8 +12,9 @@ import { UserRole } from 'generated/prisma/enums'
 import { Authorization } from 'src/shared/auth/decorators/auth.decorator'
 import { Authorized } from 'src/shared/auth/decorators/authorized.decorator'
 import { UpdateUserDto } from './dto/update-user.dto'
-import { TUserWithAccount } from './types/user-with-account.type'
+
 import { UserService } from './user.service'
+import { TUserWithAccount } from './user.types'
 
 @Controller('users')
 export class UserController {

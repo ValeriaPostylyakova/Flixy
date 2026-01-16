@@ -12,14 +12,15 @@ import {
 	Res,
 	UseGuards
 } from '@nestjs/common'
+import { ConfigService } from '@nestjs/config'
 import { Recaptcha } from '@nestlab/google-recaptcha'
 import type { Request, Response } from 'express'
+import { ProviderGuard } from 'src/shared/guards/provider.guard'
 import { AuthService } from './auth.service'
+import { TUserMessage } from './auth.types'
 import { LoginDto } from './dto/login.dto'
 import { RegisterDto } from './dto/register.dto'
-import { ProviderGuard } from 'src/shared/guards/provider.guard'
 import { ProviderService } from './provider/provider.service'
-import { ConfigService } from '@nestjs/config'
 
 @Controller('auth')
 export class AuthController {
@@ -32,14 +33,20 @@ export class AuthController {
 	@Post('register')
 	@HttpCode(HttpStatus.CREATED)
 	@Recaptcha()
-	public async register(@Req() req: Request, @Body() dto: RegisterDto) {
+	public async register(
+		@Req() req: Request,
+		@Body() dto: RegisterDto
+	): Promise<TUserMessage> {
 		return this.authService.register(req, dto)
 	}
 
 	@Post('login')
 	@HttpCode(HttpStatus.OK)
 	@Recaptcha()
-	public async login(@Req() req: Request, @Body() dto: LoginDto) {
+	public async login(
+		@Req() req: Request,
+		@Body() dto: LoginDto
+	): Promise<TUserMessage> {
 		return this.authService.login(req, dto)
 	}
 
@@ -79,7 +86,7 @@ export class AuthController {
 	public async logout(
 		@Req() req: Request,
 		@Res({ passthrough: true }) res: Response
-	) {
+	): Promise<void> {
 		return this.authService.logout(req, res)
 	}
 }

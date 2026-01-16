@@ -3,8 +3,7 @@ import { hash } from 'argon2'
 import { User } from 'generated/prisma/client'
 import { PrismaService } from 'src/shared/database/prisma/prisma.service'
 import { UpdateUserDto } from './dto/update-user.dto'
-import { TCreateUser } from './types/create.type'
-import { TUserWithAccount } from './types/user-with-account.type'
+import { ICreateUser, TUserWithAccount } from './user.types'
 
 @Injectable()
 export class UserRepository {
@@ -32,7 +31,7 @@ export class UserRepository {
 		})
 	}
 
-	public async create(user: TCreateUser): Promise<TUserWithAccount> {
+	public async create(user: ICreateUser): Promise<TUserWithAccount> {
 		return await this.prismaService.user.create({
 			data: {
 				email: user.email,

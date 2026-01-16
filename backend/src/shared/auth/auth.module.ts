@@ -10,7 +10,7 @@ import { ProviderModule } from './provider/provider.module'
 import { UserModule } from 'src/models/user/user.module'
 import { MailService } from 'src/shared/libs/mail/mail.service'
 import { EmailConfirmationModule } from './email-confirmation/email-confirmation.module'
-import { TwoFactorAuthService } from './two-factor-auth/two-factor-auth.service'
+import { TwoFactorAuthModule } from './two-factor-auth/two-factor-auth.module'
 
 @Module({
 	imports: [
@@ -26,10 +26,11 @@ import { TwoFactorAuthService } from './two-factor-auth/two-factor-auth.service'
 			inject: [ConfigService]
 		}),
 		forwardRef(() => EmailConfirmationModule),
-		UserModule
+		UserModule,
+		TwoFactorAuthModule
 	],
 	controllers: [AuthController],
-	providers: [AuthService, MailService, TwoFactorAuthService],
+	providers: [AuthService, MailService],
 	exports: [AuthService]
 })
 export class AuthModule {}

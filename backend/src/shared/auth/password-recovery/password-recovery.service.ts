@@ -9,6 +9,7 @@ import { MailService } from 'src/shared/libs/mail/mail.service'
 import { v4 as uuidv4 } from 'uuid'
 import { PasswordRecoveryRepository } from './password-recovery.repository'
 
+import { Token } from 'generated/prisma/client'
 import { TokensRepository } from '../tokens/tokens.repository'
 import { NewPasswordDto } from './dto/new-password.dto'
 import { ResetPasswordDto } from './dto/reset-password.dto'
@@ -22,7 +23,7 @@ export class PasswordRecoveryService {
 		private readonly passwordRecoveryRepository: PasswordRecoveryRepository
 	) {}
 
-	public async reset(dto: ResetPasswordDto) {
+	public async reset(dto: ResetPasswordDto): Promise<boolean> {
 		const existingUser = await this.userService.findByEmail(dto.email)
 
 		if (!existingUser) {
@@ -41,7 +42,10 @@ export class PasswordRecoveryService {
 		return true
 	}
 
-	public async newPassword(dto: NewPasswordDto, token: string) {
+	public async newPassword(
+		dto: NewPasswordDto,
+		token: string
+	): Promise<boolean> {
 		const existingToken = await this.tokensRepository.findByToken(
 			token,
 			TokenType.PASSWORD_RESET
@@ -79,7 +83,7 @@ export class PasswordRecoveryService {
 		return true
 	}
 
-	private async generateResetPasswordToken(email: string) {
+	private async generateResetPasswordToken(email: string): Promise<Token> {
 		const token = uuidv4()
 		const expiresIn = new Date(new Date().getTime() + 60 * 60 * 1000)
 

@@ -6,8 +6,8 @@ import {
 import { User } from 'generated/prisma/client'
 import { AuthMethod } from 'generated/prisma/enums'
 import { UpdateUserDto } from './dto/update-user.dto'
-import { TUserWithAccount } from './types/user-with-account.type'
 import { UserRepository } from './user.repository'
+import { TUserWithAccount } from './user.types'
 
 @Injectable()
 export class UserService {

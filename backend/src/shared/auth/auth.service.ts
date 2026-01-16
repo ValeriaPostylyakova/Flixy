@@ -10,13 +10,14 @@ import { verify } from 'argon2'
 import { Request, Response } from 'express'
 import { User } from 'generated/prisma/browser'
 import { AuthMethod } from 'generated/prisma/enums'
-import { PrismaService } from 'src/shared/database/prisma/prisma.service'
 import { UserService } from 'src/models/user/user.service'
+import { PrismaService } from 'src/shared/database/prisma/prisma.service'
 
+import { TUserMessage } from './auth.types'
 import { LoginDto } from './dto/login.dto'
 import { RegisterDto } from './dto/register.dto'
-import { ProviderService } from './provider/provider.service'
 import { EmailConfirmationService } from './email-confirmation/email-confirmation.service'
+import { ProviderService } from './provider/provider.service'
 import { TwoFactorAuthService } from './two-factor-auth/two-factor-auth.service'
 
 @Injectable()
@@ -30,7 +31,7 @@ export class AuthService {
 		private readonly twoFactorAuthService: TwoFactorAuthService
 	) {}
 
-	public async register(req: Request, dto: RegisterDto) {
+	public async register(req: Request, dto: RegisterDto): Promise<TUserMessage> {
 		const isExistUser = await this.userService.findByEmail(dto.email)
 
 		if (isExistUser)
@@ -55,7 +56,7 @@ export class AuthService {
 		}
 	}
 
-	public async login(req: Request, dto: LoginDto) {
+	public async login(req: Request, dto: LoginDto): Promise<TUserMessage> {
 		const user = await this.userService.findByEmail(dto.email)
 
 		if (!user || !user.password)
@@ -132,7 +133,7 @@ export class AuthService {
 		req: Request,
 		provider: string,
 		code: string
-	) {
+	): Promise<User | undefined> {
 		const providerInstance = this.providerService.findByService(provider)
 		const profile = await providerInstance?.findUserByCode(code)
 

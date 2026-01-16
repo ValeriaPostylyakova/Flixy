@@ -20,7 +20,7 @@ export class PasswordRecoveryController {
 	@Recaptcha()
 	@Post('reset')
 	@HttpCode(HttpStatus.OK)
-	async reset(@Body() dto: ResetPasswordDto) {
+	async reset(@Body() dto: ResetPasswordDto): Promise<boolean> {
 		return this.passwordRecoveryService.reset(dto)
 	}
 
@@ -30,7 +30,7 @@ export class PasswordRecoveryController {
 	async newPassword(
 		@Param('token') token: string,
 		@Body() dto: NewPasswordDto
-	) {
+	): Promise<boolean> {
 		return this.passwordRecoveryService.newPassword(dto, token)
 	}
 }

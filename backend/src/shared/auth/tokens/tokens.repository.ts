@@ -1,13 +1,17 @@
 import { Injectable } from '@nestjs/common'
 import { TokenType } from 'generated/prisma/browser'
+import { Token } from 'generated/prisma/client'
 import { PrismaService } from 'src/shared/database/prisma/prisma.service'
-import { TCreateToken } from './types/create.type'
+import { ICreateToken } from './tokens.types'
 
 @Injectable()
 export class TokensRepository {
 	public constructor(private readonly prismaService: PrismaService) {}
 
-	public async findByToken(token: string, type: TokenType) {
+	public async findByToken(
+		token: string,
+		type: TokenType
+	): Promise<Token | null> {
 		return await this.prismaService.token.findUnique({
 			where: {
 				token,
@@ -16,7 +20,7 @@ export class TokensRepository {
 		})
 	}
 
-	public async deleteToken(id: string, type: TokenType) {
+	public async deleteToken(id: string, type: TokenType): Promise<Token> {
 		return await this.prismaService.token.delete({
 			where: {
 				id,
@@ -25,7 +29,10 @@ export class TokensRepository {
 		})
 	}
 
-	public async findByTokenEmail(email: string, type: TokenType) {
+	public async findByTokenEmail(
+		email: string,
+		type: TokenType
+	): Promise<Token | null> {
 		return await this.prismaService.token.findFirst({
 			where: {
 				email,
@@ -34,7 +41,7 @@ export class TokensRepository {
 		})
 	}
 
-	public async createToken(data: TCreateToken) {
+	public async createToken(data: ICreateToken): Promise<Token> {
 		return await this.prismaService.token.create({
 			data: {
 				email: data.email,

@@ -3,24 +3,26 @@ import {
 	Injectable,
 	NotFoundException
 } from '@nestjs/common'
+import { Token } from 'generated/prisma/client'
 import { TokenType } from 'generated/prisma/enums'
-import { PrismaService } from 'src/shared/database/prisma/prisma.service'
 import { MailService } from 'src/shared/libs/mail/mail.service'
+import { TokensRepository } from '../tokens/tokens.repository'
 
 @Injectable()
 export class TwoFactorAuthService {
 	public constructor(
-		private readonly prismaService: PrismaService,
+		private readonly tokensRepository: TokensRepository,
 		private readonly mailService: MailService
 	) {}
 
-	public async validateTwoFactorToken(email: string, code: string) {
-		const existingToken = await this.prismaService.token.findFirst({
-			where: {
-				email,
-				type: TokenType.TWO_FACTOR
-			}
-		})
+	public async validateTwoFactorToken(
+		email: string,
+		code: string
+	): Promise<boolean> {
+		const existingToken = await this.tokensRepository.findByTokenEmail(
+			email,
+			TokenType.TWO_FACTOR
+		)
 
 		if (!existingToken) {
 			throw new NotFoundException(
@@ -42,17 +44,15 @@ export class TwoFactorAuthService {
 			)
 		}
 
-		await this.prismaService.token.delete({
-			where: {
-				id: existingToken.id,
-				type: TokenType.TWO_FACTOR
-			}
-		})
+		await this.tokensRepository.deleteToken(
+			existingToken.id,
+			TokenType.TWO_FACTOR
+		)
 
 		return true
 	}
 
-	public async sendTwoFactorToken(email: string) {
+	public async sendTwoFactorToken(email: string): Promise<boolean> {
 		const twoFactorToken = await this.generateTwoFactorToken(email)
 
 		await this.mailService.sendToFactorToken(
@@ -63,34 +63,28 @@ export class TwoFactorAuthService {
 		return true
 	}
 
-	private async generateTwoFactorToken(email: string) {
+	private async generateTwoFactorToken(email: string): Promise<Token> {
 		const token = Math.floor(100000 + Math.random() * 900000).toString()
 
 		const expiresIn = new Date(new Date().getTime() + 300000)
 
-		const existingToken = await this.prismaService.token.findFirst({
-			where: {
-				email,
-				type: TokenType.TWO_FACTOR
-			}
-		})
+		const existingToken = await this.tokensRepository.findByTokenEmail(
+			email,
+			TokenType.TWO_FACTOR
+		)
 
 		if (existingToken) {
-			await this.prismaService.token.delete({
-				where: {
-					id: existingToken.id,
-					type: TokenType.TWO_FACTOR
-				}
-			})
+			await this.tokensRepository.deleteToken(
+				existingToken.id,
+				TokenType.TWO_FACTOR
+			)
 		}
 
-		const twoFactorToken = await this.prismaService.token.create({
-			data: {
-				email,
-				token,
-				expiresIn,
-				type: TokenType.TWO_FACTOR
-			}
+		const twoFactorToken = await this.tokensRepository.createToken({
+			email,
+			token,
+			expiresIn,
+			type: TokenType.TWO_FACTOR
 		})
 
 		return twoFactorToken

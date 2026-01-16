@@ -6,7 +6,7 @@ import {
 	NotFoundException
 } from '@nestjs/common'
 import { Request } from 'express'
-import { User } from 'generated/prisma/client'
+import { Token, User } from 'generated/prisma/client'
 import { TokenType } from 'generated/prisma/enums'
 import { UserService } from 'src/models/user/user.service'
 import { MailService } from 'src/shared/libs/mail/mail.service'
@@ -29,7 +29,10 @@ export class EmailConfirmationService {
 		private readonly authService: AuthService
 	) {}
 
-	public async newVerificationToken(req: Request, dto: ConfirmationDto) {
+	public async newVerificationToken(
+		req: Request,
+		dto: ConfirmationDto
+	): Promise<User> {
 		const existingToken = await this.tokensRepository.findByToken(
 			dto.token,
 			TokenType.VERIFICATION
@@ -64,7 +67,7 @@ export class EmailConfirmationService {
 		return this.authService.saveSession(req, existingUser)
 	}
 
-	public async sendVerificationToken(user: User) {
+	public async sendVerificationToken(user: User): Promise<boolean> {
 		const verificationToken = await this.generateVerificationToken(user.email)
 
 		await this.mailService.sendConfirmationEmail(
@@ -75,7 +78,7 @@ export class EmailConfirmationService {
 		return true
 	}
 
-	private async generateVerificationToken(email: string) {
+	private async generateVerificationToken(email: string): Promise<Token> {
 		const token = uuidv4()
 		const expiresIn = new Date(new Date().getTime() + 60 * 60 * 1000)
 
