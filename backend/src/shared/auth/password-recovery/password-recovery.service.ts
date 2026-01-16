@@ -5,20 +5,21 @@ import {
 } from '@nestjs/common'
 import { TokenType } from 'generated/prisma/enums'
 import { UserService } from 'src/models/user/user.service'
-import { PrismaService } from 'src/shared/database/prisma/prisma.service'
 import { MailService } from 'src/shared/libs/mail/mail.service'
 import { v4 as uuidv4 } from 'uuid'
+import { PasswordRecoveryRepository } from './password-recovery.repository'
 
-import { hash } from 'argon2'
+import { TokensRepository } from '../tokens/tokens.repository'
 import { NewPasswordDto } from './dto/new-password.dto'
 import { ResetPasswordDto } from './dto/reset-password.dto'
 
 @Injectable()
 export class PasswordRecoveryService {
 	public constructor(
-		private readonly prismaService: PrismaService,
 		private readonly mailService: MailService,
-		private readonly userService: UserService
+		private readonly userService: UserService,
+		private readonly tokensRepository: TokensRepository,
+		private readonly passwordRecoveryRepository: PasswordRecoveryRepository
 	) {}
 
 	public async reset(dto: ResetPasswordDto) {
@@ -41,12 +42,10 @@ export class PasswordRecoveryService {
 	}
 
 	public async newPassword(dto: NewPasswordDto, token: string) {
-		const existingToken = await this.prismaService.token.findFirst({
-			where: {
-				token,
-				type: TokenType.PASSWORD_RESET
-			}
-		})
+		const existingToken = await this.tokensRepository.findByToken(
+			token,
+			TokenType.PASSWORD_RESET
+		)
 
 		if (!existingToken) {
 			throw new BadRequestException(
@@ -70,21 +69,12 @@ export class PasswordRecoveryService {
 			)
 		}
 
-		await this.prismaService.user.update({
-			where: {
-				id: user.id
-			},
-			data: {
-				password: await hash(dto.password)
-			}
-		})
+		await this.passwordRecoveryRepository.updatePassword(user.id, dto.password)
 
-		await this.prismaService.token.delete({
-			where: {
-				id: existingToken.id,
-				type: TokenType.PASSWORD_RESET
-			}
-		})
+		await this.tokensRepository.deleteToken(
+			existingToken.id,
+			TokenType.PASSWORD_RESET
+		)
 
 		return true
 	}
@@ -93,31 +83,23 @@ export class PasswordRecoveryService {
 		const token = uuidv4()
 		const expiresIn = new Date(new Date().getTime() + 60 * 60 * 1000)
 
-		const existingToken = await this.prismaService.token.findFirst({
-			where: {
-				email,
-				type: TokenType.PASSWORD_RESET
-			}
-		})
+		const existingToken = await this.tokensRepository.findByTokenEmail(
+			email,
+			TokenType.PASSWORD_RESET
+		)
 
 		if (existingToken) {
-			await this.prismaService.token.delete({
-				where: {
-					id: existingToken.id,
-					type: TokenType.PASSWORD_RESET
-				}
-			})
+			await this.tokensRepository.deleteToken(
+				existingToken.id,
+				TokenType.PASSWORD_RESET
+			)
 		}
 
-		const passwordResetToken = await this.prismaService.token.create({
-			data: {
-				email,
-				token,
-				expiresIn,
-				type: TokenType.PASSWORD_RESET
-			}
+		return await this.tokensRepository.createToken({
+			email,
+			token,
+			expiresIn,
+			type: TokenType.PASSWORD_RESET
 		})
-
-		return passwordResetToken
 	}
 }

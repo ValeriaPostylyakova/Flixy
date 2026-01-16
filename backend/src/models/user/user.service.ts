@@ -3,27 +3,20 @@ import {
 	Injectable,
 	NotFoundException
 } from '@nestjs/common'
-import { hash } from 'argon2'
-import { AuthMethod } from 'generated/prisma/enums'
-import { PrismaService } from 'src/shared/database/prisma/prisma.service'
-import { UpdateUserDto } from './dto/update-user.dto'
 import { User } from 'generated/prisma/client'
+import { AuthMethod } from 'generated/prisma/enums'
+import { UpdateUserDto } from './dto/update-user.dto'
+import { TUserWithAccount } from './types/user-with-account.type'
+import { UserRepository } from './user.repository'
 
 @Injectable()
 export class UserService {
-	public constructor(private readonly prismaService: PrismaService) {}
+	public constructor(private readonly userRepository: UserRepository) {}
 
-	public async findById(id: string) {
+	public async findById(id: string): Promise<TUserWithAccount | null> {
 		if (!id) return null
 
-		const user = await this.prismaService.user.findUnique({
-			where: {
-				id
-			},
-			include: {
-				account: true
-			}
-		})
+		const user = this.userRepository.findById(id)
 
 		if (!user)
 			throw new NotFoundException(
@@ -33,17 +26,8 @@ export class UserService {
 		return user
 	}
 
-	public async findByEmail(email: string) {
-		const user = await this.prismaService.user.findUnique({
-			where: {
-				email
-			},
-			include: {
-				account: true
-			}
-		})
-
-		return user
+	public async findByEmail(email: string): Promise<TUserWithAccount | null> {
+		return await this.userRepository.findMyEmail(email)
 	}
 
 	public async create(
@@ -53,36 +37,25 @@ export class UserService {
 		picture: string,
 		method: AuthMethod,
 		isVerified: boolean
-	) {
-		const userExists = await this.prismaService.user.findUnique({
-			where: {
-				email
-			}
-		})
+	): Promise<TUserWithAccount> {
+		const userExists = await this.userRepository.findMyEmail(email)
 
 		if (userExists)
 			throw new ConflictException(
 				'Пользователь с таким email уже существует. Пожалуйста проверьте введенные данные.'
 			)
 
-		const user = await this.prismaService.user.create({
-			data: {
-				email,
-				password: await hash(password),
-				displayName,
-				picture,
-				method,
-				isVerified
-			},
-			include: {
-				account: true
-			}
+		return await this.userRepository.create({
+			email,
+			password,
+			displayName,
+			picture,
+			method,
+			isVerified
 		})
-
-		return user
 	}
 
-	public async update(userId: string, dto: UpdateUserDto) {
+	public async update(userId: string, dto: UpdateUserDto): Promise<User> {
 		const user = await this.findById(userId)
 
 		if (!user)
@@ -90,17 +63,6 @@ export class UserService {
 				'Пользователь не найден. Пожалуйста проверьте введенные данные.'
 			)
 
-		const updatedUser = await this.prismaService.user.update({
-			where: {
-				id: user.id
-			},
-			data: {
-				email: dto.email,
-				displayName: dto.name,
-				isTwoFactorEnable: dto.isTwoFactorEnabled
-			}
-		})
-
-		return updatedUser
+		return await this.userRepository.update(user.id, dto)
 	}
 }
